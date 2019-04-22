@@ -1,0 +1,13 @@
+syntax = "proto3";
+  
+import "google/protobuf/empty.proto";
+
+package pb;
+
+message CheckoutInput {
+	string cartId = 1;
+}
+
+service CheckoutService {
+	rpc Checkout (CheckoutInput) returns (google.protobuf.Empty) {}
+}
