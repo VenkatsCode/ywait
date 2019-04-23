@@ -142,6 +142,17 @@ func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindA
 
 func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
 
+
+	var result pb.Product
+	err := collection.FindOne(ctx, req.Id).Decode(&result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if result.Quantity - req.Quantity < 0 {
+		req.Quantity = 0
+	}
+
 	filter := bson.M{"id": req.Id}
 	updateResult, err := collection.UpdateOne(ctx, filter, bson.M{"$set": bson.M{"id": req.Id, "name": req.Name, "description": req.Description, "details": req.Details, "price": req.Price, "quantity": req.Quantity}})
 
