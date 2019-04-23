@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
@@ -20,8 +18,6 @@ import (
 )
 
 type productServer struct {
-	gorm.Model
-	savedProducts []*pb.Product
 }
 
 var collection *mongo.Collection
