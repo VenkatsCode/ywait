@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
@@ -95,7 +96,10 @@ func (s *productServer) FindOne(ctx context.Context, req *pb.ProductId) (*pb.Pro
 
 	var result pb.Product
 	//filter := bson.D{{"Id", req.GetId()}}
-	collection.FindOne(ctx, req).Decode(&result)
+	err := collection.FindOne(ctx, req).Decode(&result)
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf("Found a single document: %+v\n", result)
 
 	return &result, nil
@@ -133,15 +137,43 @@ func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindA
 
 	fmt.Printf("Found multiple documents (array of pointers): %+v\n", productsList)
 
-	return status.Errorf(codes.Unimplemented, "method FindAll not implemented")
+	return status.Errorf(codes.OK, "All products")
 }
 
 func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+
+	filter := bson.D{{"Id", req.GetId()}}
+	updateResult, err := collection.UpdateOne(ctx, filter, req)
+	if err != nil {
+		log.Fatal("Error updating Product %s", err.Error())
+	}
+
+	fmt.Printf("Updated: %+v\n", updateResult)
+	return req, nil
+
 }
+
 func (s *productServer) Delete(ctx context.Context, req *pb.ProductId) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+
+	deleteResult, err := collection.DeleteOne(context.TODO(), req)
+	if err != nil {
+		log.Fatal("Error deleting Product %s", err.Error())
+	}
+	fmt.Printf("Deleted %v product\n", deleteResult.DeletedCount)
+
+	return nil, status.Errorf(codes.Unavailable, "product deleted")
 }
+
 func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Validate not implemented")
+
+	var result pb.Product
+	filter := bson.D{{"Id", req.GetId()}}
+	err := collection.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		log.Fatal("No product found wiht Id: %+v", result.GetQuantity())
+	}
+	if result.GetQuantity() < req.GetQuantity() {
+		return nil, grpc.Errorf(codes.InvalidArgument, "Product quantity cannot be more than: %+v", result.GetQuantity())
+	}
+	return nil, status.Errorf(codes.OK, "Validated")
 }
