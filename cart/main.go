@@ -7,7 +7,6 @@ import (
 
 	"../pb"
 	"github.com/golang/protobuf/ptypes/empty"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	context "golang.org/x/net/context"
@@ -86,17 +85,76 @@ func (s *server) FindAll(_ *empty.Empty, in pb.CartService_FindAllServer) error 
 }
 
 func (s *server) Update(ctx context.Context, in *pb.Cart) (*pb.Cart, error) {
-	return nil, nil
+	var filter pb.Cart
+	filter.Id = in.Id
+	_, err := collection.UpdateOne(ctx, filter, in)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return in, nil
 }
 
 func (s *server) Delete(ctx context.Context, in *pb.CartId) (*empty.Empty, error) {
+	_, err := collection.DeleteOne(ctx, in)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
 	return nil, nil
 }
 
-func (s *server) AddToCart(ctx context.Context, in *pb.ValidateQuantity) (*pb.Cart, error) {
-	return nil, nil
+func (s *server) AddToCart(ctx context.Context, in *pb.CartQuantity) (*pb.Cart, error) {
+	filter := pb.CartId{Id: in.CartId}
+	cart, err := s.FindOne(ctx, &filter)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	cart.Products[in.ProductId] += in.Quantity
+	err = validate(ctx, in.ProductId, cart.Products[in.ProductId])
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, cart)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return cart, nil
 }
 
-func (s *server) RemoveFromCart(ctx context.Context, in *pb.ValidateQuantity) (*pb.Cart, error) {
-	return nil, nil
+func (s *server) RemoveFromCart(ctx context.Context, in *pb.CartQuantity) (*pb.Cart, error) {
+	filter := pb.CartId{Id: in.CartId}
+	cart, err := s.FindOne(ctx, &filter)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	if cart.Products[in.ProductId] >= in.Quantity {
+		delete(cart.Products, in.ProductId)
+	} else {
+		cart.Products[in.ProductId] -= in.Quantity
+	}
+
+	_, err = collection.UpdateOne(ctx, filter, cart)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return cart, nil
+}
+
+func validate(ctx context.Context, productID string, quantity int32) error {
+	connProduct, err := grpc.Dial(":9999", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	productClient := pb.NewProductServiceClient(connProduct)
+	_, err = productClient.Validate(ctx, &pb.ValidateQuantity{Id: productID, Quantity: quantity})
+	return err
 }
