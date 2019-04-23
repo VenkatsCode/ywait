@@ -10,11 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
-
-	"google.golang.org/grpc"
 
 	"../pb"
 )
@@ -181,7 +179,7 @@ func (s *productServer) Delete(ctx context.Context, req *pb.ProductId) (*empty.E
 func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) (*empty.Empty, error) {
 
 	var result pb.Product
-	filter := bson.D{{"Id", req.GetId()}}
+	filter := bson.M{"id":req.GetId()}
 	err := collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		log.Fatal("No product found wiht Id: %+v", result.GetQuantity())
@@ -189,5 +187,5 @@ func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) 
 	if result.GetQuantity() < req.GetQuantity() {
 		return nil, grpc.Errorf(codes.InvalidArgument, "Product quantity cannot be more than: %+v", result.GetQuantity())
 	}
-	return nil, status.Errorf(codes.OK, "Validated")
+	return nil, nil
 }

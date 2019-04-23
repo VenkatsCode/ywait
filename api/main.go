@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"../pb"
+	"../product_http"
 	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 )
@@ -16,10 +17,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Dial failed: %v", err)
 	}
+
 	r := gin.Default()
 	registerGCD(r, conn)
 	registerCartService(r, conn)
 	registerProductServiceServer(r, conn)
+	registerProductServiceHttpServer(r)
 	if err := r.Run(":3000"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
@@ -71,6 +74,20 @@ func registerProductServiceServer(r *gin.Engine, conn *grpc.ClientConn) {
 		desc := c.Param("a")
 		req := &pb.Product{Description: desc}
 		if res, err := productClient.Create(c, req); err == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(*res),
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+}
+
+func registerProductServiceHttpServer(r *gin.Engine) {
+
+	r.GET("/producthttp/:a", func(c *gin.Context) {
+		productID := c.Param("a")
+		if res, err := product_http.FindOneHttp(c, productID); err == nil {
 			c.JSON(http.StatusOK, gin.H{
 				"result": fmt.Sprint(*res),
 			})
