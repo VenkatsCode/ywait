@@ -16,7 +16,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Dial failed: %v", err)
 	}
-
 	r := gin.Default()
 	registerGCD(r, conn)
 	registerCartService(r, conn)

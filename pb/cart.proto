@@ -7,17 +7,16 @@ package pb;
 
 message Cart {
   string id = 1;
-  string name = 2;
-  string description = 3;
-  map<string,int32> products = 4;
-  int32 totalItems = 5;
-  double totalCost = 6;
+  string description = 2;
+  map<string,int32> products = 3;
+  int32 totalItems = 4;
+  double totalCost = 5;
   enum Status {
     CREATED = 0;
     PLACED = 1;
     SHIPPED = 2;
   }
-  Status status = 7;
+  Status status = 6;
 }
 
 message CartId {
