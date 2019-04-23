@@ -56,8 +56,7 @@ func initDatabase() {
 }
 
 func (s *server) Create(ctx context.Context, in *pb.Cart) (*pb.Cart, error) {
-	cartModel := in
-	_, err := collection.InsertOne(ctx, cartModel)
+	_, err := collection.InsertOne(ctx, in)
 	if err != nil {
 		log.Printf("Error creating cart %s", err.Error())
 	}
@@ -65,10 +64,24 @@ func (s *server) Create(ctx context.Context, in *pb.Cart) (*pb.Cart, error) {
 }
 
 func (s *server) FindOne(ctx context.Context, in *pb.CartId) (*pb.Cart, error) {
-	return &pb.Cart{Id: "code_1", Description: "Hi"}, nil
+	result := collection.FindOne(ctx, in)
+	var x pb.Cart
+	err := result.Decode(&x)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return &x, nil
 }
 
 func (s *server) FindAll(_ *empty.Empty, in pb.CartService_FindAllServer) error {
+	// cursor, err := collection.Find(nil, nil)
+	// var x pb.Cart
+	// err := result.Decode(&x)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return nil, err
+	// }
 	return nil
 }
 
