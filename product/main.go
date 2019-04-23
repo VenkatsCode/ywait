@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,8 +13,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"log"
-	"net"
 
 	"google.golang.org/grpc"
 
@@ -23,9 +24,8 @@ type productServer struct {
 
 var collection *mongo.Collection
 
-
 func main() {
-	lis, err := net.Listen("tcp", ":7777")
+	lis, err := net.Listen("tcp", ":9999")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -38,7 +38,6 @@ func main() {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 }
-
 
 func initDatabase() {
 	// Set client options
@@ -58,13 +57,10 @@ func initDatabase() {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-	collection = client.Database("test").Collection("test")
+	collection = client.Database("go-team-go").Collection("product")
 }
 
-
-
 func (s *productServer) Create(ctx context.Context, req *pb.Product) (*pb.Product, error) {
-
 
 	product := req
 
@@ -106,14 +102,12 @@ func (s *productServer) FindOne(ctx context.Context, req *pb.ProductId) (*pb.Pro
 
 }
 
-
 func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindAllServer) error {
-
 	findOptions := options.Find()
 
 	var productsList []*pb.Product
 
-	cur, err := collection.Find(context.TODO(), nil, findOptions)
+	cur, err := collection.Find(context.TODO(), bson.M{}, findOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -138,20 +132,23 @@ func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindA
 	cur.Close(context.TODO())
 
 	for _, feature := range productsList {
-			if err := stream.Send(feature); err != nil {
-				return err
-			}
+		if err := stream.Send(feature); err != nil {
+			return err
 		}
+	}
 
 	return nil
 }
 
 func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
 
-	filter := bson.D{{"Id", req.GetId()}}
-	updateResult, err := collection.UpdateOne(ctx, filter, req)
+	filter := bson.M{"id": req.Id}
+	updateResult, err := collection.UpdateOne(ctx, filter, bson.M{"$set": bson.M{"id": req.Id, "name": req.Name, "description": req.Description, "details": req.Details, "price": req.Price, "quantity": req.Quantity}})
+
 	if err != nil {
 		log.Fatal("Error updating Product %s", err.Error())
+	} else {
+		log.Println(updateResult)
 	}
 
 	fmt.Printf("Updated: %+v\n", updateResult)
@@ -167,7 +164,7 @@ func (s *productServer) Delete(ctx context.Context, req *pb.ProductId) (*empty.E
 	}
 	fmt.Printf("Deleted %v product\n", deleteResult.DeletedCount)
 
-	return nil, status.Errorf(codes.Unavailable, "product deleted")
+	return new(empty.Empty), nil
 }
 
 func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) (*empty.Empty, error) {

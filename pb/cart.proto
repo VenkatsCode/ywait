@@ -11,9 +11,10 @@ message Cart {
   int32 totalItems = 4;
   double totalCost = 5;
   enum Status {
-    CREATED = 0;
-    PLACED = 1;
-    SHIPPED = 2;
+    NONE = 0;
+    CREATED = 1;
+    PLACED = 2;
+    SHIPPED = 3;
   }
   Status status = 6;
 }

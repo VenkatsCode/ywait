@@ -36,6 +36,8 @@ func (s *server) Checkout(ctx context.Context, input *pb.CheckoutInput) (*empty.
 	connCart, err := grpc.Dial(":7777", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Dial failed: %v", err)
+	} else {
+		log.Printf("Dial succeeded for cart client on port 7777!")
 	}
 	cartClient := pb.NewCartServiceClient(connCart)
 
@@ -51,10 +53,16 @@ func (s *server) Checkout(ctx context.Context, input *pb.CheckoutInput) (*empty.
 
 	//get cart from cart id
 	if resCart, err := cartClient.FindOne(ctx, reqCart); err == nil {
+		log.Printf("retrieved cart!")
 		//update cart, change status
 		retrievedCart := resCart
-		retrievedCart.Status = 1 //change cart status to PLACED
-		cartClient.Update(ctx, retrievedCart)
+		retrievedCart.Status = pb.Cart_PLACED
+		_, err := cartClient.Update(ctx, retrievedCart)
+		if err != nil {
+			log.Printf("update failed %v", err)
+		} else {
+			log.Printf("update theoretically succeeded")
+		}
 
 		//get products and their quantities from cart
 		cartProducts := retrievedCart.Products
@@ -64,13 +72,15 @@ func (s *server) Checkout(ctx context.Context, input *pb.CheckoutInput) (*empty.
 
 			// Call Product service
 			reqProduct := &pb.ProductId{Id: productID}
-			if resProduct, err := productClient.FindOne(ctx, reqProduct); err == nil {
+			resProduct, err := productClient.FindOne(ctx, reqProduct)
+			if err == nil {
 				//update product, change quantity
 				retrievedProduct := resProduct
 				retrievedProduct.Quantity = retrievedProduct.Quantity - productQuantity
 				productClient.Update(ctx, retrievedProduct)
+				log.Printf("it worked!")
 			} else {
-				log.Printf("error finding product by product id [%s]", reqProduct)
+				log.Printf("error finding product by product id [%s], %v", reqProduct, err)
 			}
 		}
 	} else {
