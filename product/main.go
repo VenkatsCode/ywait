@@ -133,11 +133,17 @@ func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindA
 		log.Fatal(err)
 	}
 
-	cur.Close(context.TODO())
-
 	fmt.Printf("Found multiple documents (array of pointers): %+v\n", productsList)
 
-	return status.Errorf(codes.OK, "All products")
+	cur.Close(context.TODO())
+
+	for _, feature := range productsList {
+			if err := stream.Send(feature); err != nil {
+				return err
+			}
+		}
+
+	return nil
 }
 
 func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
