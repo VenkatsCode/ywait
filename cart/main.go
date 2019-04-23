@@ -1,13 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
 	"../pb"
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -15,13 +17,7 @@ import (
 
 type server struct{}
 
-type CartModel struct {
-	gorm.Model
-	// pb.Cart
-	Cart *pb.Cart
-}
-
-var db *gorm.DB
+var collection *mongo.Collection
 
 func main() {
 	lis, err := net.Listen("tcp", ":7777")
@@ -39,34 +35,55 @@ func main() {
 }
 
 func initDatabase() {
-	var err error
-	db, err = gorm.Open("sqlite3", "test.db")
+	// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb+srv://admin:nimda@cluster0-vmhnr.mongodb.net/test?retryWrites=true")
+
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+
 	if err != nil {
-		panic("failed to connect database \n" + err.Error())
+		log.Fatal(err)
 	}
-	db.AutoMigrate(&CartModel{})
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connected to MongoDB!")
+	collection = client.Database("test").Collection("test")
 }
 
 func (s *server) Create(ctx context.Context, in *pb.Cart) (*pb.Cart, error) {
-	cartModel := &CartModel{Cart: in}
-	db.Create(cartModel)
+	cartModel := in
+	_, err := collection.InsertOne(ctx, cartModel)
+	if err != nil {
+		log.Printf("Error creating cart %s", err.Error())
+	}
 	return in, nil
 }
+
 func (s *server) FindOne(ctx context.Context, in *pb.CartId) (*pb.Cart, error) {
 	return &pb.Cart{Id: "code_1", Description: "Hi"}, nil
 }
+
 func (s *server) FindAll(_ *empty.Empty, in pb.CartService_FindAllServer) error {
 	return nil
 }
+
 func (s *server) Update(ctx context.Context, in *pb.Cart) (*pb.Cart, error) {
 	return nil, nil
 }
+
 func (s *server) Delete(ctx context.Context, in *pb.CartId) (*empty.Empty, error) {
 	return nil, nil
 }
+
 func (s *server) AddToCart(ctx context.Context, in *pb.ValidateQuantity) (*pb.Cart, error) {
 	return nil, nil
 }
+
 func (s *server) RemoveFromCart(ctx context.Context, in *pb.ValidateQuantity) (*pb.Cart, error) {
 	return nil, nil
 }
