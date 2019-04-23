@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-import "product.proto";
 
 package pb;
 
@@ -23,13 +22,18 @@ message CartId {
     string id = 1;
 }
 
+message CartQuantity {
+  string cartId = 1;
+  string productId = 2;
+  int32 quantity = 3;
+}
+
 service CartService {
   rpc Create (Cart) returns (Cart) {}
   rpc FindOne (CartId) returns (Cart) {}
   rpc FindAll (google.protobuf.Empty) returns (stream Cart) {}
   rpc Update (Cart) returns (Cart) {}
   rpc Delete (CartId) returns (google.protobuf.Empty) {}
-  rpc AddToCart (ValidateQuantity) returns (Cart) {}
-  rpc RemoveFromCart (ValidateQuantity) returns (Cart) {}
+  rpc AddToCart (CartQuantity) returns (Cart) {}
+  rpc RemoveFromCart (CartQuantity) returns (Cart) {}
 }
-
