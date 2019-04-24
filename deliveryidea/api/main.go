@@ -37,6 +37,17 @@ func main() {
 
 func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 	client := pb.NewOrderServiceClient(conn)
+	r.GET("/order/:a", func(c *gin.Context) {
+		orderId := c.Param("a")
+		body := &pb.OrderId{
+			Id: orderId,
+		}
+		if res, err := client.Get(c, body); err == nil {
+			c.JSON(http.StatusOK, res)
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
 	r.POST("/order/place/:a", func(c *gin.Context) {
 		name := c.Param("a")
 		body := &pb.Order{
