@@ -162,8 +162,8 @@ func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*em
 
 
 	var delivery pb.Delivery
-	fecthFilter := bson.M{"deliveryid": req.DeliveryId}
-	err1 := collection.FindOne(ctx, fecthFilter).Decode(&delivery)
+	fetchFilter := bson.M{"deliveryid": req.DeliveryId}
+	err1 := collection.FindOne(ctx, fetchFilter).Decode(&delivery)
 	if err1 != nil {
 		log.Fatalf("Cannot fetch delivery for ID: %v", req.DeliveryId)
 		return nil, err
