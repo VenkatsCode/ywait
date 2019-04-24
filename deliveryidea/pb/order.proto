@@ -35,9 +35,9 @@ service OrderService {
     //1. calls delivery/PublishOrder
     rpc PlaceOrder (Order) returns (google.protobuf.Empty) {}
 
-    //6. changes status of Order to IN_TRANSIT
+    //6. changes status of Order to IN_TRANSIT, calls Messaging/SendMessage
     rpc DeliveringOrder (OrderId) returns (google.protobuf.Empty) {}
 
-    //9. changes status of Order to DELIVERED
+    //9. changes status of Order to DELIVERED, calls Messaging/SendMessage
     rpc DeliveredOrder (OrderId) returns (google.protobuf.Empty) {}
 }

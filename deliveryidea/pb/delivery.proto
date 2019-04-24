@@ -18,6 +18,11 @@ message Delivery {
   Status status = 5;
 }
 
+message DeliveryOrder {
+  string deliveryId = 1;
+  string orderId = 2;
+}
+
 service DeliveryService {
   rpc Register (Delivery) returns (Delivery) {}
   rpc Remove (Delivery) returns (google.protobuf.Empty) {}
@@ -26,11 +31,10 @@ service DeliveryService {
   rpc PublishOrder (Order) returns (google.protobuf.Empty) {}
 
   //5. delivery person accepts delivery, change Delivery status
-  //5. calls Order/DeliveringOrder, calls Messaging/SendMessage
-  rpc AcceptDelivery (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  //5. calls Order/DeliveringOrder
+  rpc AcceptDelivery (DeliveryOrder) returns (google.protobuf.Empty) {}
 
   //8. change status of Delivery to available
   //8. calls Order/DeliveredOrder
-  //8. calls Messaging/SendMessage
-  rpc ConfirmDelivery (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc ConfirmDelivery (DeliveryOrder) returns (google.protobuf.Empty) {}
 }
