@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "customer.proto";
+
+package pb;
+
+message CustomerInfo {
+    string customerId = 1;
+    string name = 2;
+    string deliveryLocation = 3;
+    string phone = 4;
+}
+
+message Order {
+    string orderId = 1;
+    string storeLocation = 2;
+    CustomerInfo customer = 3;
+    enum Status {
+        NONE = 0;
+        PLACED = 1;
+        IN_TRANSIT = 2;
+        DELIVERED = 3;
+      }
+    Status status = 4;
+}
+
+message OrderId {
+    string id = 1;
+}
+
+service OrderService {
+    //4. delivery guys click link, sees orders on webpage
+    rpc Get (OrderId) returns (Order) {}
+
+    //1. calls delivery/PublishOrder
+    rpc PlaceOrder (Order) returns (google.protobuf.Empty) {}
+
+    //6. changes status of Order to IN_TRANSIT
+    rpc DeliveringOrder (OrderId) returns (google.protobuf.Empty) {}
+
+    //9. changes status of Order to DELIVERED
+    rpc DeliveredOrder (OrderId) returns (google.protobuf.Empty) {}
+}
