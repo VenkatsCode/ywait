@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	// "google.golang.org/grpc/status"
 	"log"
 	"net"
 
@@ -14,7 +13,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 
-	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 
 	"../pb"
@@ -30,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	log.Println("Starting Product server")
+	log.Println("Starting Order server")
 	s := grpc.NewServer()
 	pb.RegisterOrderServiceServer(s, &orderServer{})
 	reflection.Register(s)
@@ -98,7 +96,7 @@ func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty
 
 func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (*empty.Empty, error) {
 	filter := bson.M{"orderid": req.OrderId}
-	log.Println("before calling update")
+
 	_, err := collection.UpdateOne(ctx, filter,
 		bson.M{"$set": bson.M{"status": pb.Order_IN_TRANSIT}})
 	if err != nil {
@@ -106,7 +104,6 @@ func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (
 		return nil, err
 	}
 
-	log.Println("after update")
 	//call messaging service to send a message to the customer that the order is in transit
 	//create messaging client and call send method
 	connMessage, err := grpc.Dial(":7070", grpc.WithInsecure())
@@ -115,14 +112,12 @@ func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (
 	}
 	messageClient := pb.NewMessageServiceClient(connMessage)
 
-	log.Println("before fetch")
 	var order pb.Order
 	filter1 := bson.M{"orderid": req.OrderId}
 	err1 := collection.FindOne(ctx, filter1).Decode(&order)
 	if err1 != nil {
 		log.Fatalf("Cannot fetch order for ID: %v", req.OrderId)
 	}
-	log.Println("after fetch")
 
 	var message pb.Message
 	message.Recipients = []string{order.Customer.Phone}
@@ -156,7 +151,7 @@ func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty
 
 	var message pb.Message
 	message.Recipients = []string{order.Customer.Phone}
-	message.Message = fmt.Sprintf("Order with id %v is in delivered", req.Id)
+	message.Message = fmt.Sprintf("Thanks %v for shopping with us, Order with id %v is in delivered", order.Customer.Name ,req.Id)
 	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }
