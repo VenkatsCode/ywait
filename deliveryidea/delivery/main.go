@@ -105,7 +105,7 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 		log.Fatal(err)
 	}
 
-	availableDeliverers := []string{}
+	//availableDeliverers := []string{}
 
 	for cur.Next(context.TODO()) {
 		var elem pb.Delivery
@@ -116,27 +116,37 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 
 		log.Printf("Found element: %s\n", &elem)
 
-		availableDeliverers = append(availableDeliverers, elem.Phone)
+		var acceptUrl string
+		acceptUrl = fmt.Sprintf("localhost:3000/order?%v&%s", req.OrderId, elem.DeliveryId)
+
+		reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to accept pickup and more information", acceptUrl ), Recipients: []string{elem.Phone}, Type: pb.Message_TEXT}
+		if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
+			log.Printf("response from sending message to available delivery people %v", resMessaging)
+		} else {
+			log.Printf("error in sending message to available delivery people %v", err)
+		}
+
+		//availableDeliverers = append(availableDeliverers, elem.Phone)
 	}
 
 	cur.Close(context.TODO())
 
-	var acceptUrl string
-	acceptUrl = fmt.Sprintf("localhost:3000/order?%v", req.OrderId)
-
-	reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to accept pickup and more information", acceptUrl ), Recipients: availableDeliverers, Type: pb.Message_TEXT}
-	if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
-		log.Printf("response from sending message to available delivery people %v", resMessaging)
-	} else {
-		log.Printf("error in sending message to available delivery people %v", err)
-	}
+	//var acceptUrl string
+	//acceptUrl = fmt.Sprintf("localhost:3000/order?%v", req.OrderId)
+	//
+	//reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to accept pickup and more information", acceptUrl ), Recipients: availableDeliverers, Type: pb.Message_TEXT}
+	//if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
+	//	log.Printf("response from sending message to available delivery people %v", resMessaging)
+	//} else {
+	//	log.Printf("error in sending message to available delivery people %v", err)
+	//}
 
 	return new(empty.Empty), err
 }
 
 func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*empty.Empty, error) {
 	//update status of delivery guy to delivering
-	updateFilter := bson.M{"deliveryid": req.Delivery.DeliveryId}
+	updateFilter := bson.M{"deliveryid": req.DeliveryId}
 	_, err := collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_DELIVERING}})
 	if err != nil {
 		log.Println(err)
@@ -150,8 +160,18 @@ func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*em
 	}
 	orderClient = pb.NewOrderServiceClient(connOrder)
 
+
+	var delivery pb.Delivery
+	fecthFilter := bson.M{"deliveryid": req.DeliveryId}
+	err1 := collection.FindOne(ctx, fecthFilter).Decode(&delivery)
+	if err1 != nil {
+		log.Fatalf("Cannot fetch delivery for ID: %v", req.DeliveryId)
+		return nil, err
+	}
+
+
 	//calls DeliveringOrder to update order status
-	reqOrder := &pb.DeliveryInfo{OrderId: req.OrderId, DeliveryPersonName: req.Delivery.Name, DeliveryPersonMobile: req.Delivery.Phone}
+	reqOrder := &pb.DeliveryInfo{OrderId: req.OrderId, DeliveryPersonName: delivery.Name, DeliveryPersonMobile: delivery.Phone}
 	if resOrder, err := orderClient.DeliveringOrder(ctx, reqOrder); err == nil {
 		log.Printf("response from calling DeliveringOrder %v", resOrder)
 	} else {
@@ -170,7 +190,7 @@ func (s *server) ConfirmDelivery(ctx context.Context, req *pb.DeliveryOrder) (*e
 	orderClient = pb.NewOrderServiceClient(connOrder)
 
 	//update status of delivery guy to available
-	updateFilter := bson.M{"deliveryid": req.Delivery.DeliveryId}
+	updateFilter := bson.M{"deliveryid": req.DeliveryId}
 	_, err = collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_AVAILABLE}})
 	if err != nil {
 		log.Println(err)
