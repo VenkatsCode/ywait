@@ -28,6 +28,12 @@ message OrderId {
     string id = 1;
 }
 
+message DeliveryInfo {
+    string orderId = 1;
+    string deliveryPersonName = 2;
+    string deliveryPersonMobile = 3;
+}
+
 service OrderService {
     //4. delivery guys click link, sees orders on webpage
     rpc Get (OrderId) returns (Order) {}
@@ -35,9 +41,9 @@ service OrderService {
     //1. calls delivery/PublishOrder
     rpc PlaceOrder (Order) returns (google.protobuf.Empty) {}
 
-    //6. changes status of Order to IN_TRANSIT, calls Messaging/SendMessage
-    rpc DeliveringOrder (OrderId) returns (google.protobuf.Empty) {}
+    //6. changes status of Order to IN_TRANSIT, call messaging service to send a message to the customer that the order is in transit
+    rpc DeliveringOrder (DeliveryInfo) returns (google.protobuf.Empty) {}
 
-    //9. changes status of Order to DELIVERED, calls Messaging/SendMessage
+    //9. changes status of Order to DELIVERED, call messaging service to send a message to the customer that the order is delivered
     rpc DeliveredOrder (OrderId) returns (google.protobuf.Empty) {}
 }

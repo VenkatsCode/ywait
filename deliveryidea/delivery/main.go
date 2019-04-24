@@ -124,7 +124,7 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 
 func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*empty.Empty, error) {
 	//update status of delivery guy to delivering
-	updateFilter := bson.M{"id": req.DeliveryId}
+	updateFilter := bson.M{"id": req.Delivery.DeliveryId}
 	_, err := collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_DELIVERING}})
 	if err != nil {
 		log.Println(err)
@@ -132,7 +132,7 @@ func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*em
 	}
 
 	//calls DeliveringOrder to update order status
-	reqOrder := &pb.OrderId{Id: req.OrderId}
+	reqOrder := &pb.DeliveryInfo{OrderId: req.OrderId, DeliveryPersonName: req.Delivery.Name, DeliveryPersonMobile: req.Delivery.Phone}
 	if resOrder, err := orderClient.DeliveringOrder(ctx, reqOrder); err == nil {
 		log.Printf("response from calling DeliveringOrder %v", resOrder)
 	} else {
@@ -144,7 +144,7 @@ func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*em
 
 func (s *server) ConfirmDelivery(ctx context.Context, req *pb.DeliveryOrder) (*empty.Empty, error) {
 	//update status of delivery guy to available
-	updateFilter := bson.M{"id": req.DeliveryId}
+	updateFilter := bson.M{"id": req.Delivery.DeliveryId}
 	_, err := collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_AVAILABLE}})
 	if err != nil {
 		log.Println(err)
