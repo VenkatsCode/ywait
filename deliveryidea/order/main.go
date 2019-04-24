@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc/status"
+	// "google.golang.org/grpc/status"
 	"log"
 	"net"
 
@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
+	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 
 	"../pb"
@@ -24,7 +24,7 @@ type orderServer struct {
 var collection *mongo.Collection
 
 func main() {
-	lis, err := net.Listen("tcp", ":9999")
+	lis, err := net.Listen("tcp", ":9090")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
@@ -60,46 +60,9 @@ func initDatabase() {
 }
 
 
-func (*orderServer) Get(ctx context.Context, req *OrderId) (*Order, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
-}
-func (*orderServer) PlaceOrder(ctx context.Context, req *Order) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PlaceOrder not implemented")
-}
+func (*orderServer) Get(ctx context.Context, req *pb.OrderId) (*pb.Order, error) {
 
-
-
-func (s *productServer) Create(ctx context.Context, req *pb.Product) (*pb.Product, error) {
-
-	product := req
-
-	if product.Id == "" {
-		return nil, grpc.Errorf(codes.InvalidArgument, "Product ID cannot be empty")
-	}
-
-	if product.Description == "" {
-		return nil, grpc.Errorf(codes.InvalidArgument, "Product Description cannot be empty")
-	}
-
-	if product.Name == "" {
-		return nil, grpc.Errorf(codes.InvalidArgument, "Product name cannot be empty")
-	}
-
-	if product.Price == 0 {
-		return nil, grpc.Errorf(codes.InvalidArgument, "Product Price cannot be zero")
-	}
-
-	_, err := collection.InsertOne(ctx, product)
-
-	if err != nil {
-		log.Printf("Error creating Product %s", err.Error())
-	}
-	return product, nil
-}
-
-func (s *productServer) FindOne(ctx context.Context, req *pb.ProductId) (*pb.Product, error) {
-
-	var result pb.Product
+	var result pb.Order
 	//filter := bson.D{{"Id", req.GetId()}}
 	err := collection.FindOne(ctx, req).Decode(&result)
 	if err != nil {
@@ -108,95 +71,52 @@ func (s *productServer) FindOne(ctx context.Context, req *pb.ProductId) (*pb.Pro
 	fmt.Printf("Found a single document: %+v\n", result)
 
 	return &result, nil
-
 }
 
-func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindAllServer) error {
-	findOptions := options.Find()
+func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty, error) {
 
-	var productsList []*pb.Product
+	order := req
 
-	cur, err := collection.Find(context.TODO(), bson.M{}, findOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for cur.Next(context.TODO()) {
-
-		// create a value into which the single document can be decoded
-		var elem pb.Product
-		err := cur.Decode(&elem)
-		if err != nil {
-			log.Fatal(err)
-		}
-		productsList = append(productsList, &elem)
-	}
-
-	if err := cur.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Found multiple documents (array of pointers): %+v\n", productsList)
-
-	cur.Close(context.TODO())
-
-	for _, feature := range productsList {
-		if err := stream.Send(feature); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
-
-
-	var result pb.Product
-	err := collection.FindOne(ctx, req.Id).Decode(&result)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if result.Quantity - req.Quantity < 0 {
-		req.Quantity = 0
-	}
-
-	filter := bson.M{"id": req.Id}
-	updateResult, err := collection.UpdateOne(ctx, filter, bson.M{"$set": bson.M{"id": req.Id, "name": req.Name, "description": req.Description, "details": req.Details, "price": req.Price, "quantity": req.Quantity}})
+	_, err := collection.InsertOne(ctx, order)
 
 	if err != nil {
-		log.Fatal("Error updating Product %s", err.Error())
-	} else {
-		log.Println(updateResult)
+		log.Printf("Error creating order %s", err.Error())
 	}
 
-	fmt.Printf("Updated: %+v\n", updateResult)
-	return req, nil
-
-}
-
-func (s *productServer) Delete(ctx context.Context, req *pb.ProductId) (*empty.Empty, error) {
-
-	deleteResult, err := collection.DeleteOne(context.TODO(), req)
+	//create delivery client
+	connDelivery, err := grpc.Dial(":8080", grpc.WithInsecure())
 	if err != nil {
-		log.Fatal("Error deleting Product %s", err.Error())
+		log.Fatalf("Dial failed: %v", err)
 	}
-	fmt.Printf("Deleted %v product\n", deleteResult.DeletedCount)
+	deliveryClient := pb.NewDeliveryServiceClient(connDelivery)
+
+	// deliveryClient.PublishOrder(order)
 
 	return new(empty.Empty), nil
 }
 
-func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) (*empty.Empty, error) {
+func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.OrderId) (*empty.Empty, error) {
 
-	var result pb.Product
-	filter := bson.M{"id":req.GetId()}
-	err := collection.FindOne(ctx, filter).Decode(&result)
+	filter := bson.M{"id": req.Id}
+	_, err := collection.UpdateOne(ctx, filter,
+		bson.M{"$set": bson.M{"status": 2}})
 	if err != nil {
-		log.Fatal("No product found wiht Id: %+v", result.GetQuantity())
+		log.Println(err)
+		return nil, err
 	}
-	if result.GetQuantity() < req.GetQuantity() {
-		return nil, grpc.Errorf(codes.InvalidArgument, "Product quantity cannot be more than: %+v", result.GetQuantity())
-	}
-	return nil, nil
+	return new(empty.Empty), nil
 }
+
+func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty.Empty, error) {
+
+	filter := bson.M{"id": req.Id}
+	_, err := collection.UpdateOne(ctx, filter,
+		bson.M{"$set": bson.M{"status": 3}})
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+	return new(empty.Empty), nil
+}
+
+
