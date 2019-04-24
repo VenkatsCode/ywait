@@ -1,28 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"../pb"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	order, err := grpc.Dial(":9090", grpc.WithInsecure())
+	orderConn, err := grpc.Dial(":9090", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Dial failed: %v", err)
 	}
-	// delivery, err := grpc.Dial(":8080", grpc.WithInsecure())
-	// if err != nil {
-	// 	log.Fatalf("Dial failed: %v", err)
-	// }
+	deliveryConn, err := grpc.Dial(":8080", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
 
 	r := gin.Default()
-	registerOrderService(r, order)
+	registerOrderService(r, orderConn)
+	registerDeliveryService(r, deliveryConn)
 	if err := r.Run(":3000"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
@@ -30,7 +32,7 @@ func main() {
 
 func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 	client := pb.NewOrderServiceClient(conn)
-	r.POST("/order/:a", func(c *gin.Context) {
+	r.POST("/order/place/:a", func(c *gin.Context) {
 		name := c.Param("a")
 		body := &pb.Order{
 			OrderId:       fmt.Sprint(time.Now().Unix()),
@@ -39,9 +41,66 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 				CustomerId:       fmt.Sprintf("%s_%d", name, time.Now().Unix()),
 				Name:             name,
 				DeliveryLocation: "H3L1L2",
-				Phone:            "+15145156646"},
+				Phone:            "+14164545447"},
 		}
 		if res, err := client.PlaceOrder(c, body); err == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(*res),
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+}
+
+type DevelieryInput struct {
+	OrderId    string `json:"orderId"`
+	DeliveryId string `json:"deliveryId"`
+}
+
+func registerDeliveryService(r *gin.Engine, conn *grpc.ClientConn) {
+	client := pb.NewDeliveryServiceClient(conn)
+	r.POST("/order/accept", func(c *gin.Context) {
+		buf := make([]byte, 1024)
+		num, _ := c.Request.Body.Read(buf)
+		reqBody := string(buf[0:num])
+		log.Println("input: ", reqBody)
+		output := &DevelieryInput{}
+		err := json.Unmarshal(buf[0:num], output)
+		if err != nil {
+			log.Error("error unmarshalling response ", err)
+		}
+		log.Println("output: ", output)
+		body := &pb.DeliveryOrder{
+			OrderId:    output.OrderId,
+			DeliveryId: output.DeliveryId,
+		}
+		log.Println("Req body: ", body)
+		if res, err := client.AcceptDelivery(c, body); err == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"result": fmt.Sprint(*res),
+			})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	})
+	r.POST("/order/delivered", func(c *gin.Context) {
+		buf := make([]byte, 1024)
+		num, _ := c.Request.Body.Read(buf)
+		reqBody := string(buf[0:num])
+		log.Println("input: ", reqBody)
+		output := &DevelieryInput{}
+		err := json.Unmarshal(buf[0:num], output)
+		if err != nil {
+			log.Error("error unmarshalling response ", err)
+		}
+		log.Println("output: ", output)
+		body := &pb.DeliveryOrder{
+			OrderId:    output.OrderId,
+			DeliveryId: output.DeliveryId,
+		}
+		log.Println("Req body: ", body)
+		if res, err := client.ConfirmDelivery(c, body); err == nil {
 			c.JSON(http.StatusOK, gin.H{
 				"result": fmt.Sprint(*res),
 			})
