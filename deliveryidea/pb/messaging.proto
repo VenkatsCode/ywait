@@ -4,19 +4,6 @@ import "google/protobuf/empty.proto";
 
 package pb;
 
-message Delivery {
-  string deliveryId = 1;
-  string location = 2;
-  string name = 3;
-  string phone = 4;
-  enum Status {
-    NONE = 0;
-    AVAILABLE = 1;
-    DELIVERING = 2;
-  }
-  Status status = 5;
-}
-
 message Message {
     string message = 1;
     string recipient = 2;
