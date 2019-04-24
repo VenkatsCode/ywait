@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package pb;
+
+message Delivery {
+  string deliveryId = 1;
+  string location = 2;
+  string name = 3;
+  string phone = 4;
+  enum Status {
+    NONE = 0;
+    AVAILABLE = 1;
+    DELIVERING = 2;
+  }
+  Status status = 5;
+}
+
+message Message {
+    string message = 1;
+    string recipient = 2;
+    enum Type {
+        NONE = 0;
+        EMAIL = 1;
+        TEXT = 2;
+    }
+    Type type = 3;
+}
+
+service MessageService {
+    //3. send message to delivery guys
+    //7. send message to customer that order is in transit
+    //10. send message to customer that message is delivered
+    rpc Send (Message) returns (google.protobuf.Empty) {}
+}

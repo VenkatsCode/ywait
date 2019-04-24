@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "order.proto";
+
+package pb;
+
+message Delivery {
+  string deliveryId = 1;
+  string location = 2;
+  string name = 3;
+  string phone = 4;
+  enum Status {
+    NONE = 0;
+    AVAILABLE = 1;
+    DELIVERING = 2;
+  }
+  Status status = 5;
+}
+
+service DeliveryService {
+  rpc Register (Delivery) returns (Delivery) {}
+  rpc Remove (Delivery) returns (google.protobuf.Empty) {}
+
+  //2. filters delivery guys by status, calls Messaging/SendMessage
+  rpc PublishOrder (Order) returns (google.protobuf.Empty) {}
+
+  //5. delivery person accepts delivery, change Delivery status
+  //5. calls Order/DeliveringOrder, calls Messaging/SendMessage
+  rpc AcceptDelivery (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  //8. change status of Delivery to available
+  //8. calls Order/DeliveredOrder
+  //8. calls Messaging/SendMessage
+  rpc ConfirmDelivery (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
