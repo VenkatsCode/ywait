@@ -19,7 +19,7 @@ message Delivery {
 }
 
 message DeliveryOrder {
-  Delivery delivery = 1;
+  string deliveryId = 1;
   string orderId = 2;
 }
 
