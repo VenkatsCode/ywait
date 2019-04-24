@@ -6,7 +6,7 @@ package pb;
 
 message Message {
     string message = 1;
-    string recipient = 2;
+    repeated string recipient = 2;
     enum Type {
         NONE = 0;
         EMAIL = 1;
