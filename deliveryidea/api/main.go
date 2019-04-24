@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"../pb"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -23,6 +24,10 @@ func main() {
 	}
 
 	r := gin.Default()
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"*"}
+
+	r.Use(cors.New(config))
 	registerOrderService(r, orderConn)
 	registerDeliveryService(r, deliveryConn)
 	if err := r.Run(":3000"); err != nil {
