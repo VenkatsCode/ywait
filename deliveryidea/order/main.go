@@ -76,6 +76,7 @@ func (*orderServer) Get(ctx context.Context, req *pb.OrderId) (*pb.Order, error)
 func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty, error) {
 
 	order := req
+	order.Status = pb.Order_PLACED
 
 	_, err := collection.InsertOne(ctx, order)
 
@@ -94,28 +95,67 @@ func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty
 	return new(empty.Empty), nil
 }
 
-func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.OrderId) (*empty.Empty, error) {
-
-	filter := bson.M{"id": req.Id}
+func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (*empty.Empty, error) {
+	filter := bson.M{"id": req.OrderId}
 	_, err := collection.UpdateOne(ctx, filter,
-		bson.M{"$set": bson.M{"status": 2}})
+		bson.M{"$set": bson.M{"status": pb.Order_IN_TRANSIT}})
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+	//call messaging service to send a message to the customer that the order is in transit
+	//create messaging client and call send method
+	connMessage, err := grpc.Dial(":7070", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	messageClient := pb.NewMessageServiceClient(connMessage)
+
+	var order pb.Order
+	filter1 := bson.M{"id":req.OrderId}
+	err1 := collection.FindOne(ctx, filter1).Decode(&order)
+	if err1 != nil {
+		log.Fatalf("Cannot fetch order for ID: %v", req.OrderId)
+	}
+
+	var message pb.Message
+	message.Recipient = []string{order.Customer.Phone}
+	message.Message = fmt.Sprintf("Order with id %v is in transit, it is being picked up by %v and you can reach him at %v", req.OrderId, req.DeliveryPersonName, req.DeliveryPersonMobile)
+	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }
+
 
 func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty.Empty, error) {
 
 	filter := bson.M{"id": req.Id}
 	_, err := collection.UpdateOne(ctx, filter,
-		bson.M{"$set": bson.M{"status": 3}})
+		bson.M{"$set": bson.M{"status": pb.Order_DELIVERED}})
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+	//call messaging service to send a message to the customer that the order is delivered
+	//create messaging client and call send method
+	connMessage, err := grpc.Dial(":7070", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	messageClient := pb.NewMessageServiceClient(connMessage)
+
+	var order pb.Order
+	filter1 := bson.M{"id":req.Id}
+	err1 := collection.FindOne(ctx, filter1).Decode(&order)
+	if err1 != nil {
+		log.Fatalf("Cannot fetch order for ID: %v", req.Id)
+	}
+
+	var message pb.Message
+	message.Recipient = []string{order.Customer.Phone}
+	message.Message = fmt.Sprintf("Order with id %v is in delivered", req.Id)
+	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }
+
 
 
