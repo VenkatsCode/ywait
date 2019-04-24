@@ -83,14 +83,13 @@ func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty
 		log.Printf("Error creating order %s", err.Error())
 	}
 
-	//create delivery client
+	//create delivery client and call publish order
 	connDelivery, err := grpc.Dial(":8080", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Dial failed: %v", err)
 	}
 	deliveryClient := pb.NewDeliveryServiceClient(connDelivery)
-
-	// deliveryClient.PublishOrder(order)
+	deliveryClient.PublishOrder(ctx, req)
 
 	return new(empty.Empty), nil
 }
