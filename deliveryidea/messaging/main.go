@@ -28,6 +28,7 @@ func main() {
 	s := grpc.NewServer()
 	pb.RegisterMessageServiceServer(s, &server{})
 	reflection.Register(s)
+	setup()
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
