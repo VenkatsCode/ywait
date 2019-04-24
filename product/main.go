@@ -140,14 +140,13 @@ func (s *productServer) FindAll(req *empty.Empty, stream pb.ProductService_FindA
 
 func (s *productServer) Update(ctx context.Context, req *pb.Product) (*pb.Product, error) {
 
-
 	var result pb.Product
 	err := collection.FindOne(ctx, req.Id).Decode(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if result.Quantity - req.Quantity < 0 {
+	if result.Quantity-req.Quantity < 0 {
 		req.Quantity = 0
 	}
 
@@ -177,9 +176,8 @@ func (s *productServer) Delete(ctx context.Context, req *pb.ProductId) (*empty.E
 }
 
 func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) (*empty.Empty, error) {
-
 	var result pb.Product
-	filter := bson.M{"id":req.GetId()}
+	filter := bson.M{"id": req.GetId()}
 	err := collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		log.Fatal("No product found wiht Id: %+v", result.GetQuantity())
@@ -187,5 +185,5 @@ func (s *productServer) Validate(ctx context.Context, req *pb.ValidateQuantity) 
 	if result.GetQuantity() < req.GetQuantity() {
 		return nil, grpc.Errorf(codes.InvalidArgument, "Product quantity cannot be more than: %+v", result.GetQuantity())
 	}
-	return nil, nil
+	return new(empty.Empty), nil
 }

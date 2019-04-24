@@ -86,38 +86,25 @@ func (s *server) FindAll(_ *empty.Empty, in pb.CartService_FindAllServer) error 
 
 	findOptions := options.Find()
 
-	var cartsList []*pb.Cart
-
 	cur, err := collection.Find(context.TODO(), bson.M{}, findOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for cur.Next(context.TODO()) {
-
-		// create a value into which the single document can be decoded
 		var elem pb.Cart
 		err := cur.Decode(&elem)
 		if err != nil {
 			log.Fatal(err)
 		}
-		cartsList = append(cartsList, &elem)
-	}
 
-	if err := cur.Err(); err != nil {
-		log.Fatal(err)
-	}
+		log.Printf("Found element: %s\n", &elem)
 
-	fmt.Printf("Found multiple documents (array of pointers): %+v\n", cartsList)
-
-	cur.Close(context.TODO())
-
-	for _, feature := range cartsList {
-		if err := in.Send(feature); err != nil {
+		if err := in.Send(&elem); err != nil {
 			return err
 		}
 	}
-
+	cur.Close(context.TODO())
 	return nil
 }
 
@@ -138,7 +125,7 @@ func (s *server) Delete(ctx context.Context, in *pb.CartId) (*empty.Empty, error
 		log.Println(err)
 		return nil, err
 	}
-	return nil, nil
+	return new(empty.Empty), nil
 }
 
 func (s *server) AddToCart(ctx context.Context, in *pb.CartQuantity) (*pb.Cart, error) {
@@ -148,19 +135,23 @@ func (s *server) AddToCart(ctx context.Context, in *pb.CartQuantity) (*pb.Cart, 
 	if err != nil {
 		log.Println(err)
 		return nil, err
-	} else {
-		log.Printf("found cart with id %s", cart.Id)
 	}
 
+	log.Printf("found cart with id %s", cart.Id)
 	log.Printf("product id: %s", in.ProductId)
+
 	cart.Products[in.ProductId] += in.Quantity
-	/*err = validate(ctx, in.ProductId, cart.Products[in.ProductId])
+	err = validate(ctx, in.ProductId, cart.Products[in.ProductId])
 	if err != nil {
-		log.Println(err)
+		log.Println("Error calling validate product, ", err)
 		return nil, err
-	} else {
-		log.Printf("validated successfully")
-	}*/
+	}
+	log.Printf("validated successfully")
+	err = updateMetadata(ctx, cart, in)
+	if err != nil {
+		log.Println("Error updating total cost / items, ", err)
+		return nil, err
+	}
 
 	updateFilter := bson.M{"id": in.CartId}
 	_, err = collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"products": cart.Products}})
@@ -168,9 +159,8 @@ func (s *server) AddToCart(ctx context.Context, in *pb.CartQuantity) (*pb.Cart, 
 	if err != nil {
 		log.Println(err)
 		return nil, err
-	} else {
-		log.Printf("updated successfully")
 	}
+	log.Printf("updated successfully")
 	return cart, nil
 }
 
@@ -190,12 +180,11 @@ func (s *server) RemoveFromCart(ctx context.Context, in *pb.CartQuantity) (*pb.C
 
 	updateFilter := bson.M{"id": in.CartId}
 	_, err = collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"products": cart.Products}})
-
-	//_, err = collection.UpdateOne(ctx, filter, cart)
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+
 	return cart, nil
 }
 
@@ -207,4 +196,20 @@ func validate(ctx context.Context, productID string, quantity int32) error {
 	productClient := pb.NewProductServiceClient(connProduct)
 	_, err = productClient.Validate(ctx, &pb.ValidateQuantity{Id: productID, Quantity: quantity})
 	return err
+}
+
+func updateMetadata(ctx context.Context, cart *pb.Cart, in *pb.CartQuantity) error {
+	connProduct, err := grpc.Dial(":9999", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	productClient := pb.NewProductServiceClient(connProduct)
+	item, err := productClient.FindOne(ctx, &pb.ProductId{Id: in.ProductId})
+	if err != nil {
+		return err
+	}
+
+	cart.TotalCost += item.Price * float64(in.Quantity)
+	cart.TotalItems += in.Quantity
+	return nil
 }
