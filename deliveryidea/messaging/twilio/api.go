@@ -4,9 +4,9 @@ import "github.com/Bimde/httputils"
 
 // Message represents the body of the message data sent to Twilio
 type MessageRequest struct {
-	To   string `json:"to"`
-	From string `json:"from"`
-	Body string `json:"body"`
+	To   string `json:"To"`
+	From string `json:"From"`
+	Body string `json:"Body"`
 }
 
 // Client contains Twilio configuration

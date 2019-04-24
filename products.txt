@@ -1,0 +1,5 @@
+grpc_cli call localhost:9999 Create "id: 'product0', name: 'name_product_0', description: 'a product description', details: {}, price: 0, quantity: 0"
+grpc_cli call localhost:9999 Create "id: 'product1', name: 'name_product_1', description: 'a product description', details: {}, price: 1, quantity: 1"
+grpc_cli call localhost:9999 Create "id: 'product2', name: 'name_product_2', description: 'a product description', details: {}, price: 2, quantity: 2"
+grpc_cli call localhost:9999 Create "id: 'product3', name: 'name_product_3', description: 'a product description', details: {}, price: 3, quantity: 3"
+grpc_cli call localhost:9999 Create "id: 'product4', name: 'name_product_4', description: 'a product description', details: {}, price: 4, quantity: 4"

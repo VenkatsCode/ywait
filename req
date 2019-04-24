@@ -1,0 +1,5 @@
+curl -X POST https://api.twilio.com/2010-04-01/Accounts/ACc5eda94fc61ce2ce2f955e1ec73f15e8/Messages.json \
+--data-urlencode "From=+16479303390" \
+--data-urlencode "Body=Body" \
+--data-urlencode "To=+14164545447" \
+-u ACc5eda94fc61ce2ce2f955e1ec73f15e8:7062d893bda6fdca3f34dadafe043140

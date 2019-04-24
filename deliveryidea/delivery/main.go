@@ -89,6 +89,15 @@ func (s *server) Remove(ctx context.Context, req *pb.Delivery) (*empty.Empty, er
 }
 
 func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty, error) {
+	log.Printf("publishing order")
+
+	//create messaging client
+	connMessaging, err := grpc.Dial(":7070", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	messagingClient = pb.NewMessageServiceClient(connMessaging)
+
 	findOptions := options.Find()
 
 	cur, err := collection.Find(context.TODO(), bson.M{"status": pb.Delivery_AVAILABLE}, findOptions)
@@ -96,7 +105,7 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 		log.Fatal(err)
 	}
 
-	availableDeliverers := make([]string, 0)
+	availableDeliverers := []string{}
 
 	for cur.Next(context.TODO()) {
 		var elem pb.Delivery
@@ -112,7 +121,7 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 
 	cur.Close(context.TODO())
 
-	reqMessaging := &pb.Message{Message: "New order to be picked up", Recipient: availableDeliverers, Type: pb.Message_TEXT}
+	reqMessaging := &pb.Message{Message: "New order to be picked up", Recipients: availableDeliverers, Type: pb.Message_TEXT}
 	if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
 		log.Printf("response from sending message to available delivery people %v", resMessaging)
 	} else {
@@ -124,12 +133,19 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 
 func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*empty.Empty, error) {
 	//update status of delivery guy to delivering
-	updateFilter := bson.M{"id": req.Delivery.DeliveryId}
+	updateFilter := bson.M{"deliveryid": req.Delivery.DeliveryId}
 	_, err := collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_DELIVERING}})
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
+
+	//create order client
+	connOrder, err := grpc.Dial(":9090", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	orderClient = pb.NewOrderServiceClient(connOrder)
 
 	//calls DeliveringOrder to update order status
 	reqOrder := &pb.DeliveryInfo{OrderId: req.OrderId, DeliveryPersonName: req.Delivery.Name, DeliveryPersonMobile: req.Delivery.Phone}
@@ -143,9 +159,16 @@ func (s *server) AcceptDelivery(ctx context.Context, req *pb.DeliveryOrder) (*em
 }
 
 func (s *server) ConfirmDelivery(ctx context.Context, req *pb.DeliveryOrder) (*empty.Empty, error) {
+	//create order client
+	connOrder, err := grpc.Dial(":9090", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Dial failed: %v", err)
+	}
+	orderClient = pb.NewOrderServiceClient(connOrder)
+
 	//update status of delivery guy to available
-	updateFilter := bson.M{"id": req.Delivery.DeliveryId}
-	_, err := collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_AVAILABLE}})
+	updateFilter := bson.M{"deliveryid": req.Delivery.DeliveryId}
+	_, err = collection.UpdateOne(ctx, updateFilter, bson.M{"$set": bson.M{"status": pb.Delivery_AVAILABLE}})
 	if err != nil {
 		log.Println(err)
 		return nil, err

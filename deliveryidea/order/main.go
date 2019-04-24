@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	// "google.golang.org/grpc/status"
 	"log"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+
 	// "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 
@@ -56,15 +58,14 @@ func initDatabase() {
 		log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB!")
-	collection = client.Database("go-team-go").Collection("product")
+	collection = client.Database("go-team-go").Collection("order")
 }
-
 
 func (*orderServer) Get(ctx context.Context, req *pb.OrderId) (*pb.Order, error) {
 
 	var result pb.Order
-	//filter := bson.D{{"Id", req.GetId()}}
-	err := collection.FindOne(ctx, req).Decode(&result)
+	filter := bson.M{"orderid": req.Id}
+	err := collection.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -96,13 +97,16 @@ func (*orderServer) PlaceOrder(ctx context.Context, req *pb.Order) (*empty.Empty
 }
 
 func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (*empty.Empty, error) {
-	filter := bson.M{"id": req.OrderId}
+	filter := bson.M{"orderid": req.OrderId}
+	log.Println("before calling update")
 	_, err := collection.UpdateOne(ctx, filter,
 		bson.M{"$set": bson.M{"status": pb.Order_IN_TRANSIT}})
 	if err != nil {
-		log.Println(err)
+		log.Println("Update order status failed ", err)
 		return nil, err
 	}
+
+	log.Println("after update")
 	//call messaging service to send a message to the customer that the order is in transit
 	//create messaging client and call send method
 	connMessage, err := grpc.Dial(":7070", grpc.WithInsecure())
@@ -111,24 +115,24 @@ func (*orderServer) DeliveringOrder(ctx context.Context, req *pb.DeliveryInfo) (
 	}
 	messageClient := pb.NewMessageServiceClient(connMessage)
 
+	log.Println("before fetch")
 	var order pb.Order
-	filter1 := bson.M{"id":req.OrderId}
+	filter1 := bson.M{"orderid": req.OrderId}
 	err1 := collection.FindOne(ctx, filter1).Decode(&order)
 	if err1 != nil {
 		log.Fatalf("Cannot fetch order for ID: %v", req.OrderId)
 	}
+	log.Println("after fetch")
 
 	var message pb.Message
-	message.Recipient = []string{order.Customer.Phone}
+	message.Recipients = []string{order.Customer.Phone}
 	message.Message = fmt.Sprintf("Order with id %v is in transit, it is being picked up by %v and you can reach him at %v", req.OrderId, req.DeliveryPersonName, req.DeliveryPersonMobile)
 	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }
 
-
 func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty.Empty, error) {
-
-	filter := bson.M{"id": req.Id}
+	filter := bson.M{"orderid": req.Id}
 	_, err := collection.UpdateOne(ctx, filter,
 		bson.M{"$set": bson.M{"status": pb.Order_DELIVERED}})
 	if err != nil {
@@ -144,18 +148,15 @@ func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty
 	messageClient := pb.NewMessageServiceClient(connMessage)
 
 	var order pb.Order
-	filter1 := bson.M{"id":req.Id}
+	filter1 := bson.M{"orderid": req.Id}
 	err1 := collection.FindOne(ctx, filter1).Decode(&order)
 	if err1 != nil {
 		log.Fatalf("Cannot fetch order for ID: %v", req.Id)
 	}
 
 	var message pb.Message
-	message.Recipient = []string{order.Customer.Phone}
+	message.Recipients = []string{order.Customer.Phone}
 	message.Message = fmt.Sprintf("Order with id %v is in delivered", req.Id)
 	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }
-
-
-
