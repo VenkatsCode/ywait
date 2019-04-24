@@ -121,10 +121,10 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 
 	cur.Close(context.TODO())
 
-	var confirmUrl string
-	confirmUrl = fmt.Sprintf("http://3000/order/%v/confirm", req.OrderId)
+	var acceptUrl string
+	acceptUrl = fmt.Sprintf("http://3000/order/%v/accept", req.OrderId)
 
-	reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to confirm pickup and more information", confirmUrl ), Recipients: availableDeliverers, Type: pb.Message_TEXT}
+	reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to accept pickup and more information", acceptUrl ), Recipients: availableDeliverers, Type: pb.Message_TEXT}
 	if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
 		log.Printf("response from sending message to available delivery people %v", resMessaging)
 	} else {
