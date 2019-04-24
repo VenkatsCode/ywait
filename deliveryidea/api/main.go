@@ -57,7 +57,7 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 				CustomerId:       fmt.Sprintf("%s_%d", name, time.Now().Unix()),
 				Name:             name,
 				DeliveryLocation: "H3L1L2",
-				Phone:            "+14164545447"},
+				Phone:            "+12262203524"},
 		}
 		if res, err := client.PlaceOrder(c, body); err == nil {
 			c.JSON(http.StatusOK, gin.H{
