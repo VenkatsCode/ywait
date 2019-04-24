@@ -1,0 +1,12 @@
+<h1>Customer page</h1>
+
+<form [formGroup]="form">
+  <!-- <mat-form-field> -->
+    <label>Name:</label>
+    <input name="name" formControlName="name">
+  <!-- </mat-form-field> -->
+</form>
+
+<button mat-raised-button color="primary" (click)="placeOrder()">
+  Place Order
+</button>

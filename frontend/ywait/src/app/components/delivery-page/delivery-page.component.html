@@ -1,0 +1,18 @@
+
+<h1>Order info</h1>
+<div>order id: {{orderInfo.orderId}}</div>
+<div>store coordinates: {{orderInfo.storeLocation}}</div>
+
+<div>
+  Customer info:
+  <div>delivery coordinates: {{orderInfo.customer.deliveryLocation}}</div>
+  <div>phone: {{orderInfo.customer.phone}}</div>
+</div>
+
+<button mat-raised-button (click)="accept()">
+  Accept
+</button>
+
+<button mat-raised-button (click)="delivered()">
+  Delivered
+</button>
