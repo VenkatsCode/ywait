@@ -19,6 +19,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LocationPageComponent } from './components/location-page/location-page.component';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 const appRoutes: Routes = [
   { path: 'order/track', component: LocationPageComponent },
@@ -49,7 +50,8 @@ const appRoutes: Routes = [
     BrowserAnimationsModule,
     MatSelectModule,
     MatTooltipModule,
-    MatDividerModule
+    MatDividerModule,
+    MatSnackBarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -39,8 +39,11 @@
       </div>
     </form>
 
+    <div *ngIf="orderPlaced">
+      order id: {{orderId}}
+    </div>
     <mat-card-actions>
-      <button mat-raised-button color="primary" (click)="placeOrder()">
+      <button *ngIf="!orderPlaced" mat-raised-button color="primary" (click)="placeOrder()">
         Place Order
       </button>
     </mat-card-actions>
