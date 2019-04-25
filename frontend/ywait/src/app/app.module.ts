@@ -17,8 +17,10 @@ import { MatInputModule } from '@angular/material/input';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LocationPageComponent } from './components/location-page/location-page.component';
 
 const appRoutes: Routes = [
+  { path: 'order/track', component: LocationPageComponent },
   { path: 'order/place', component: CustomerpageComponent },
   { path: 'order', component: DeliverypageComponent },
   { path: '', redirectTo: '/order', pathMatch: 'full' },
@@ -27,7 +29,8 @@ const appRoutes: Routes = [
   declarations: [
     AppComponent,
     DeliverypageComponent,
-    CustomerpageComponent
+    CustomerpageComponent,
+    LocationPageComponent
   ],
   imports: [
     RouterModule.forRoot(appRoutes),
