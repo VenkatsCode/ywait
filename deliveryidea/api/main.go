@@ -48,7 +48,7 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 	})
-	r.POST("/order/place/:a", func(c *gin.Context) {
+	r.POST("/order/place", func(c *gin.Context) {
 		//name := c.Param("a")
 		buf := make([]byte, 1024)
 		num, _ := c.Request.Body.Read(buf)

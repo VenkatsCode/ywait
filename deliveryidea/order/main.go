@@ -151,7 +151,7 @@ func (*orderServer) DeliveredOrder(ctx context.Context, req *pb.OrderId) (*empty
 
 	var message pb.Message
 	message.Recipients = []string{order.Customer.Phone}
-	message.Message = fmt.Sprintf("Thanks %v for shopping with us, order with id %v is in delivered", order.Customer.Name, req.Id)
+	message.Message = fmt.Sprintf("Thanks %v for shopping with us, order %v is successfully delivered", order.Customer.Name, req.Id)
 	messageClient.Send(ctx, &message)
 	return new(empty.Empty), nil
 }

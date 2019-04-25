@@ -117,7 +117,7 @@ func (s *server) PublishOrder(ctx context.Context, req *pb.Order) (*empty.Empty,
 		log.Printf("Found element: %s\n", &elem)
 
 		var acceptUrl string
-		acceptUrl = fmt.Sprintf("http://localhost:4200/order?orderId=%v&deliveryId=%s", req.OrderId, elem.DeliveryId)
+		acceptUrl = fmt.Sprintf("http://localhost:4200ap/order?orderId=%v&deliveryId=%s", req.OrderId, elem.DeliveryId)
 
 		reqMessaging := &pb.Message{Message: fmt.Sprintf("New order to be picked up, click %v to accept pickup and more information", acceptUrl ), Recipients: []string{elem.Phone}, Type: pb.Message_TEXT}
 		if resMessaging, err := messagingClient.Send(ctx, reqMessaging); err == nil {
