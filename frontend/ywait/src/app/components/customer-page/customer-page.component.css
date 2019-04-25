@@ -1,0 +1,12 @@
+.customerInfoCard {
+    max-width: 600px;
+    min-width: 400px;
+    padding: 50px;
+}
+
+.customerInfo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}

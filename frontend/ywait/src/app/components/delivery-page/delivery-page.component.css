@@ -1,0 +1,31 @@
+.deliveredButton {
+    color: green;
+}
+
+.orderInfo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.orderInfoCard {
+    max-width: 600px;
+    min-width: 400px;
+    padding: 50px;
+}
+
+.iconText {
+    padding-top: 15px;
+    padding-bottom: 10px;
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.deliveryIcon {
+    padding-right: 8px;
+}
+
+.doneIcon {
+    color: green;
+}

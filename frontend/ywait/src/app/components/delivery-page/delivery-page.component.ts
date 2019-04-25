@@ -17,6 +17,8 @@ export class DeliverypageComponent implements OnInit {
   orderInfo: OrderInfo;
   orderId: string;
   deliveryId: string;
+  accepted: boolean = false;
+  isDelivered: boolean = false;
 
   constructor(
     public deliveryService: DeliveryService,
@@ -41,6 +43,7 @@ export class DeliverypageComponent implements OnInit {
 
   accept() {
     console.log("accept()");
+    this.accepted = true;
     this.deliveryService.acceptDelivery(this.orderId, this.deliveryId).subscribe(() => {
       console.log("accepted");
     })
@@ -48,6 +51,7 @@ export class DeliverypageComponent implements OnInit {
 
   delivered() {
     console.log("delivered()");
+    this.isDelivered = true;
     this.deliveryService.delivered(this.orderId, this.deliveryId).subscribe(() => {
       console.log("delivered");
     })

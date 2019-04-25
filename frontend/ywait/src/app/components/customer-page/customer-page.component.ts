@@ -12,14 +12,16 @@ export class CustomerpageComponent {
 
   constructor(private fb: FormBuilder, private deliveryService: DeliveryService) {
     this.form = this.fb.group({
-      name: ['', Validators.required]
+      nameFormCtrl: ['', Validators.required],
+      addressFormCtrl: ['', Validators.required],
+      storeFormCtrl: ['', Validators.required]
     });
   }
 
   placeOrder() {
     console.log("placing order");
-    console.log("customer name: " + this.form.value.name);
-    this.deliveryService.createOrder(this.form.value.name).subscribe(() => {
+    console.log("customer name: " + this.form.value.nameFormCtrl);
+    this.deliveryService.createOrder(this.form.value.nameFormCtrl).subscribe(() => {
       console.log("placed order");
     })
   }

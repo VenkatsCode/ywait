@@ -1,18 +1,38 @@
+<div class="orderInfo">
+  <mat-card class="orderInfoCard">
+    <mat-card-header>
+      <mat-card-title>Order</mat-card-title>
+      <mat-icon *ngIf="isDelivered" class="doneIcon">done</mat-icon>
+    </mat-card-header>
+    <mat-card-content>
+      <div>
+        <span class="iconText">
+          <mat-icon class="deliveryIcon">location_on</mat-icon>
+          <span>store coordinates: {{orderInfo.storeLocation}}</span>
+        </span>
+      </div>
+      <div>
+        <span class="iconText">
+          <mat-icon class="deliveryIcon">location_on</mat-icon>
+          <span>delivery coordinates: {{orderInfo.customer.deliveryLocation}}</span>
+        </span>
+      </div>
+      <div>
+        <span class="iconText">
+          <mat-icon class="deliveryIcon">call</mat-icon>
+          <span>phone: {{orderInfo.customer.phone}}</span>
+        </span>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button *ngIf="!accepted" mat-button (click)="accept()">
+        Accept
+      </button>
 
-<h1>Order info</h1>
-<div>order id: {{orderInfo.orderId}}</div>
-<div>store coordinates: {{orderInfo.storeLocation}}</div>
-
-<div>
-  Customer info:
-  <div>delivery coordinates: {{orderInfo.customer.deliveryLocation}}</div>
-  <div>phone: {{orderInfo.customer.phone}}</div>
+      <button *ngIf="accepted && !isDelivered" mat-raised-button class="deliveredButton" (click)="delivered()">
+        Delivered
+        <mat-icon>check_circle</mat-icon>
+      </button>
+    </mat-card-actions>
+  </mat-card>
 </div>
-
-<button mat-raised-button (click)="accept()">
-  Accept
-</button>
-
-<button mat-raised-button (click)="delivered()">
-  Delivered
-</button>
