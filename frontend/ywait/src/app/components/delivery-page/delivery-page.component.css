@@ -12,7 +12,8 @@
 .orderInfoCard {
     max-width: 600px;
     min-width: 400px;
-    padding: 50px;
+    padding: 50px !important;
+    padding-top: none;
 }
 
 .iconText {
@@ -22,10 +23,19 @@
     vertical-align: middle;
 }
 
-.deliveryIcon {
+.iconRightPadding {
     padding-right: 8px;
 }
 
 .doneIcon {
     color: green;
+}
+
+.subheaderIcon {
+    padding-right: 8px;
+    padding-bottom: 10px;
+}
+
+.subheader {
+    display: inline-flex;
 }

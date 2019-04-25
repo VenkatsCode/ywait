@@ -27,8 +27,8 @@ export class DeliveryService {
     return this.http.get(url);
   }
 
-  createOrder(name: string): Observable<any> {
-    const url = this.baseUrl + 'place/' + name;
-    return this.http.post(url, true);
+  createOrder(name: string, address: string, phone: string): Observable<any> {
+    const url = this.baseUrl + 'place';
+    return this.http.post(url, {name: name, address: address, phone: phone});
   }
 }

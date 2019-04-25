@@ -10,3 +10,12 @@
     align-items: center;
     height: 100vh;
 }
+
+.iconText {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.titleIcon {
+    padding-right: 10px;
+}

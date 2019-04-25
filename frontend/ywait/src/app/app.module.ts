@@ -18,6 +18,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { LocationPageComponent } from './components/location-page/location-page.component';
+import { MatDividerModule } from '@angular/material/divider';
 
 const appRoutes: Routes = [
   { path: 'order/track', component: LocationPageComponent },
@@ -47,7 +48,8 @@ const appRoutes: Routes = [
     MatInputModule,
     BrowserAnimationsModule,
     MatSelectModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDividerModule
   ],
   providers: [],
   bootstrap: [AppComponent]
