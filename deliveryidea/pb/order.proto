@@ -7,13 +7,13 @@ package pb;
 message CustomerInfo {
     string customerId = 1;
     string name = 2;
-    string deliveryLocation = 3;
+    LatLng deliveryLocation = 3;
     string phone = 4;
 }
 
 message Order {
     string orderId = 1;
-    string storeLocation = 2;
+    LatLng storeLocation = 2;
     CustomerInfo customer = 3;
     enum Status {
         NONE = 0;
@@ -26,6 +26,11 @@ message Order {
 
 message OrderId {
     string id = 1;
+}
+
+message LatLng {
+    double lat = 1;
+    double lng = 2;
 }
 
 message DeliveryInfo {

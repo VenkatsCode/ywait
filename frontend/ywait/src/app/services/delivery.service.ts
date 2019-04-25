@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { LatLng } from '../components/customer-page/customer-page.component';
 
 @Injectable({
   providedIn: 'root'
@@ -27,8 +28,8 @@ export class DeliveryService {
     return this.http.get(url);
   }
 
-  createOrder(name: string, address: string, phone: string): Observable<any> {
+  createOrder(name: string, address: string, phone: string, latLng: LatLng): Observable<any> {
     const url = this.baseUrl + 'place';
-    return this.http.post(url, {name: name, address: address, phone: phone});
+    return this.http.post(url, {name: name, address: address, phone: phone, latLng: latLng});
   }
 }

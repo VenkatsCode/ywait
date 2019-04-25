@@ -3,8 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="7a18490b-6a04-4b35-9bb9-3f487289a89e" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/deliveryidea/api/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/deliveryidea/api/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deliveryidea/delivery/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/deliveryidea/delivery/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deliveryidea/order/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/deliveryidea/order/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deliveryidea/pb/order.pb.go" beforeDir="false" afterPath="$PROJECT_DIR$/deliveryidea/pb/order.pb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deliveryidea/pb/order.proto" beforeDir="false" afterPath="$PROJECT_DIR$/deliveryidea/pb/order.proto" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/components/customer-page/customer-page.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/components/customer-page/customer-page.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/components/customer-page/customer-page.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/components/customer-page/customer-page.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/components/delivery-page/delivery-page.component.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/components/delivery-page/delivery-page.component.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/components/delivery-page/delivery-page.component.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/components/delivery-page/delivery-page.component.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/services/delivery.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/services/delivery.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/app/services/map.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/app/services/map.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/ywait/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/ywait/src/index.html" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -108,8 +116,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/deliveryidea/api/main.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="129">
-              <caret line="50" column="24" selection-start-line="50" selection-start-column="24" selection-end-line="50" selection-end-column="24" />
+            <state relative-caret-position="178">
+              <caret line="51" lean-forward="true" selection-start-line="51" selection-end-line="51" />
             </state>
           </provider>
         </entry>
@@ -335,13 +343,13 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="29923000" />
+    <option name="totallyTimeSpent" value="30523000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1920" height="1001" extended-state="6" />
+    <frame x="0" y="23" width="1440" height="822" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19382322" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26037195" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -505,8 +513,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/deliveryidea/api/main.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="129">
-          <caret line="50" column="24" selection-start-line="50" selection-start-column="24" selection-end-line="50" selection-end-column="24" />
+        <state relative-caret-position="178">
+          <caret line="51" lean-forward="true" selection-start-line="51" selection-end-line="51" />
         </state>
       </provider>
     </entry>

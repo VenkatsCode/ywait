@@ -49,7 +49,7 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 		}
 	})
 	r.POST("/order/place", func(c *gin.Context) {
-		//name := c.Param("a")
+
 		buf := make([]byte, 1024)
 		num, _ := c.Request.Body.Read(buf)
 		reqBody := string(buf[0:num])
@@ -62,18 +62,23 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 		log.Println("output: ", output)
 
 		body := &pb.Order{
-			OrderId:       fmt.Sprint(time.Now().Unix()),
-			StoreLocation: "H3A3L4",
+			OrderId: fmt.Sprint(time.Now().Unix()),
+			//StoreLocation: "H3A3L4",
+			StoreLocation: &pb.LatLng{Lat: 45.485761, Lng: -73.553471},
 			Customer: &pb.CustomerInfo{
 				CustomerId:       fmt.Sprintf("%s_%d", output.Name, time.Now().Unix()),
 				Name:             output.Name,
-				DeliveryLocation: output.DeliveryLocation,
+				DeliveryLocation: &pb.LatLng{Lat: output.DeliveryLocation.Lat, Lng: output.DeliveryLocation.Lng},
 				Phone:            "+15145156646"},
 		}
+
+		log.Println("body: ", body)
 		if res, err := client.PlaceOrder(c, body); err == nil {
-			c.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprint(*res),
-			})
+			// c.JSON(http.StatusOK, gin.H{
+			// 	"result": fmt.Sprint(*res),
+			// })
+			log.Println(res)
+			c.JSON(http.StatusOK, body.OrderId)
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
@@ -82,7 +87,10 @@ func registerOrderService(r *gin.Engine, conn *grpc.ClientConn) {
 
 type CustomerOutput struct {
 	Name             string `json:"name"`
-	DeliveryLocation string `json:"deliveryLocation"`
+	DeliveryLocation struct {
+		Lat float64 `json:"lat"`
+		Lng float64 `json:"lng"`
+	} `json:"latLng"`
 }
 
 type DeliveryInput struct {
