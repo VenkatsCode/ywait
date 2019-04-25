@@ -48,6 +48,7 @@ export class DeliverypageComponent implements OnInit {
 
   @ViewChild('gmap') gmapElement: any;
   map: google.maps.Map;
+  marker: google.maps.Marker;
   latitude:number;
   longitude:number;
 
@@ -68,23 +69,17 @@ export class DeliverypageComponent implements OnInit {
       this.deliveryService.getOrderInfo(this.orderId).subscribe((order: Order) => {
         this.order = order;
 
+        var location = new google.maps.LatLng(this.order.customer.deliveryLocation.lat, this.order.customer.deliveryLocation.lng);
+
         var mapProp = {
-          //center: new google.maps.LatLng(45.5344459,-73.6562009),
-          center: new google.maps.LatLng(this.order.customer.deliveryLocation.lat, this.order.customer.deliveryLocation.lng),
+          center: location,
           zoom: 15,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
         this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProp);
+        this.marker = new google.maps.Marker({position: location, map: this.map});
       });
     })
-
-    // var mapProp = {
-    //   //center: new google.maps.LatLng(45.5344459,-73.6562009),
-    //   center: new google.maps.LatLng(this.order.customer.deliveryLocation.lat, this.order.customer.deliveryLocation.lng),
-    //   zoom: 15,
-    //   mapTypeId: google.maps.MapTypeId.ROADMAP
-    // };
-    // this.map = new google.maps.Map(this.gmapElement.nativeElement, mapProp);
   }
 
   accept() {
